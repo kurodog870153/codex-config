@@ -1,0 +1,7 @@
+interface:
+  display_name: "Task"
+  short_description: "Load and layer task-planning rules"
+  default_prompt: "Use $task general to load the general task-planning rules for this request."
+
+policy:
+  allow_implicit_invocation: true
