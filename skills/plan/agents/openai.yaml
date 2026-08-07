@@ -1,7 +1,7 @@
 interface:
   display_name: "Plan"
-  short_description: "Load and layer task-specific planning rules"
-  default_prompt: "Use $plan general to load the general planning rules for this task."
+  short_description: "Load layered hierarchical planning rules"
+  default_prompt: "Use $plan general web backend java to load a hierarchy of planning rules for this task."
 
 policy:
   allow_implicit_invocation: true

@@ -1,7 +1,7 @@
 interface:
   display_name: "Task"
-  short_description: "Load and layer task-planning rules"
-  default_prompt: "Use $task general to load the general task-planning rules for this request."
+  short_description: "Load layered hierarchical task-planning rules"
+  default_prompt: "Use $task general web backend java to load a hierarchy of task-planning rules for this request."
 
 policy:
   allow_implicit_invocation: true
