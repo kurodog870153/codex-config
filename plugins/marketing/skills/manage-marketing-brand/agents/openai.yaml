@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Marketing Brand"
+  short_description: "Create and update project brand profiles"
+  default_prompt: "Use $manage-marketing-brand to create or update a brand profile in the current Git project."

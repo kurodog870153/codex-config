@@ -1,0 +1,4 @@
+interface:
+  display_name: "Develop Marketing Copy"
+  short_description: "Discuss, refine, and approve marketing copy"
+  default_prompt: "Use $develop-marketing-copy to discuss and refine marketing copy before approving a final version."

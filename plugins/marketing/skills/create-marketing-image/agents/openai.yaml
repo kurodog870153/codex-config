@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Marketing Image"
+  short_description: "Create visuals from approved marketing copy"
+  default_prompt: "Use $create-marketing-image to turn approved marketing copy into a confirmed visual and generated image."

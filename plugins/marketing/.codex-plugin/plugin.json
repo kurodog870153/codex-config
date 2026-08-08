@@ -1,0 +1,26 @@
+{
+  "name": "marketing",
+  "version": "0.1.0",
+  "description": "Develop approved marketing copy, create matching images, and manage project-local brand profiles through interactive workflows.",
+  "author": {
+    "name": "wu-ming-hsun"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Marketing",
+    "shortDescription": "Develop copy and create coordinated marketing images.",
+    "longDescription": "Marketing guides interactive copy development, creates images only from approved copy, manages reusable project-local brand profiles, and saves approved campaign snapshots without overwriting prior versions.",
+    "developerName": "wu-ming-hsun",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write",
+      "Image generation"
+    ],
+    "defaultPrompt": [
+      "Develop marketing copy with me through discussion.",
+      "Create a marketing image from my approved copy.",
+      "Run a complete copy-to-image creative workflow."
+    ]
+  }
+}
