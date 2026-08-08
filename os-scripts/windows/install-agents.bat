@@ -2,9 +2,10 @@
 chcp 65001 >nul
 setlocal
 
-set "source_file=%~dp0AGENTS.md"
-set "source_work=%~dp0work"
-set "source_skills=%~dp0skills"
+for %%I in ("%~dp0..\..") do set "project_directory=%%~fI"
+set "source_file=%project_directory%\AGENTS.md"
+set "source_work=%project_directory%\work"
+set "source_skills=%project_directory%\skills"
 
 if not exist "%source_file%" (
     echo Error: source file not found: "%source_file%".

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Execute"
+  short_description: "Load layered hierarchical task-execution rules"
+  default_prompt: "Use $execute general web backend java to load a hierarchy of task-execution rules for this request."

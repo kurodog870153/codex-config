@@ -1,9 +1,10 @@
 #!/bin/bash
 
 script_directory="$(cd -- "$(dirname -- "$0")" && pwd)"
-source_file="$script_directory/AGENTS.md"
-source_work="$script_directory/work"
-source_skills="$script_directory/skills"
+project_directory="$(cd -- "$script_directory/../.." && pwd)"
+source_file="$project_directory/AGENTS.md"
+source_work="$project_directory/work"
+source_skills="$project_directory/skills"
 
 if [[ ! -f "$source_file" ]]; then
     printf 'Error: source file not found: "%s".\n' "$source_file"
