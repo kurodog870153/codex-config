@@ -8,6 +8,7 @@ echo Codex directory: "%codex_directory%"
 echo This will permanently delete:
 echo   sessions
 echo   archived_sessions
+echo   generated_images
 echo   session_index.jsonl
 echo   history.jsonl
 echo   state_5.sqlite
@@ -21,7 +22,7 @@ if not exist "%codex_directory%\" (
     exit /b 0
 )
 
-choice /c YN /n /m "Permanently delete all local Codex sessions? [Y/N] "
+choice /c YN /n /m "Permanently delete all local Codex data listed above? [Y/N] "
 if errorlevel 2 (
     echo Operation cancelled.
     pause
@@ -34,6 +35,8 @@ rmdir /s /q "%codex_directory%\sessions" 2>nul
 if exist "%codex_directory%\sessions\" set "cleanup_failed=1"
 rmdir /s /q "%codex_directory%\archived_sessions" 2>nul
 if exist "%codex_directory%\archived_sessions\" set "cleanup_failed=1"
+rmdir /s /q "%codex_directory%\generated_images" 2>nul
+if exist "%codex_directory%\generated_images\" set "cleanup_failed=1"
 
 del /f /q "%codex_directory%\session_index.jsonl" 2>nul
 if exist "%codex_directory%\session_index.jsonl" set "cleanup_failed=1"
@@ -47,11 +50,11 @@ del /f /q "%codex_directory%\state_5.sqlite-wal" 2>nul
 if exist "%codex_directory%\state_5.sqlite-wal" set "cleanup_failed=1"
 
 if "%cleanup_failed%"=="1" (
-    echo Error: one or more Codex session files could not be removed.
+    echo Error: one or more local Codex data files could not be removed.
     pause
     exit /b 1
 )
 
-echo Local Codex session data was cleaned successfully.
+echo Local Codex data was cleaned successfully.
 pause
 exit /b 0

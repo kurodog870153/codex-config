@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run Marketing Creative"
+  short_description: "Run the full copy-to-image marketing workflow"
+  default_prompt: "Use $run-marketing-creative to develop approved copy and then create its marketing image."
