@@ -147,13 +147,13 @@ if [[ -e "$target_skill" || -e "$target_work" ]]; then
     fi
 fi
 
-if ! mkdir -p -- "$target_directory/skills"; then
-    printf 'Error: failed to create the skills directory.\n'
+if ! mkdir -p -- "$target_skill"; then
+    printf 'Error: failed to create the plan skill directory.\n'
     read -r -p 'Press Enter to close...' _
     exit 1
 fi
 
-if ! cp -R -- "$source_skill" "$target_directory/skills/"; then
+if ! cp -R -- "$source_skill/." "$target_skill/"; then
     printf 'Error: failed to copy the plan skill.\n'
     read -r -p 'Press Enter to close...' _
     exit 1

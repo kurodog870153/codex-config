@@ -14,15 +14,17 @@ Manage mutable brand data outside the plugin while keeping the reusable skills u
 3. Never request, read into the profile, display, or store passwords, API keys, access tokens, private keys, or other secrets.
 4. Do not create or update files until the user reviews the proposed content, exact paths, commands or operations, validation, and risks, then explicitly confirms.
 5. Never delete, replace, or modify files in a brand's `assets/` directory unless the user separately requests and authorizes that exact action.
+6. Record a factual marketing claim as approved evidence only when the user supplies its source and approval or validity information. Otherwise preserve it as unanswered and never promote it into an approved proof point.
 
 ## Resolve locations
 
 1. Resolve the Git root with `git rev-parse --show-toplevel`.
 2. Stop and explain if the current directory is not inside a Git repository.
-3. Require `brand-id` to use lowercase kebab-case.
+3. Require `brand-id` to use lowercase kebab-case and reject the reserved `brand-neutral` ID.
 4. Read the reusable template at `../../assets/templates/brand-profile.md`, relative to this skill directory.
 5. Store the project profile at `<git-root>/marketing/brands/<brand-id>/profile.md`.
 6. Reserve `<git-root>/marketing/brands/<brand-id>/assets/` for project-owned logos, product images, fonts, and visual references.
+7. Before presenting a profile write and again immediately before applying it, run `git status --short -- <profile-path>`. If the target has staged, unstaged, untracked, or conflicted changes, stop and report the path; do not modify, stage, stash, revert, or merge it without a new explicit decision for those exact changes.
 
 ## Create a profile
 

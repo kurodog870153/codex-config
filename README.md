@@ -117,7 +117,7 @@ $execute web backend java
 
 執行任務時，使用者還必須指定：
 
-1. `./tasks/<plan-name>.md` 任務文件。
+1. `./outputs/tasks/<plan-name>.md` 任務文件。
 2. 該文件內的一個 `TASK-*` 識別碼。
 
 載入執行規則本身不代表已授權修改檔案或執行具副作用的操作。

@@ -46,13 +46,10 @@ For each resolved plan path, in hierarchy order:
 1. Check these paths in order:
    1. `~/.codex/work/plan/<resolved-plan-path>/AGENTS.md`
    2. `<project-root>/work/plan/<resolved-plan-path>/AGENTS.md`
-2. Require files for `general` and the final resolved plan path:
-   1. If neither user-level nor project-level file exists for either required path, stop and report both expected paths.
-   2. Do not continue with a partial required plan set.
-3. Treat every other intermediate plan path as optional:
-   1. If neither file exists, record the skipped path and continue.
-   2. If one or both files exist, read each existing file in the listed order.
-4. For required paths, read each existing file in the listed order after confirming that at least one exists.
+2. Require `general` and the final resolved plan path; if neither file exists for a required path, stop, report both expected paths, and do not continue with a partial set. Other paths are optional; if neither file exists, record the skipped path and continue.
+3. Select existing files without loading their contents into the model first:
+   1. If both exist, use a tool to compare their raw bytes. When identical, read only the project-level file and record the user-level file as a skipped duplicate; when different, read both in the listed order.
+   2. If only one exists, read it.
 
 ## Apply layered instructions
 

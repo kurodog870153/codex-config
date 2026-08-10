@@ -1,6 +1,6 @@
 ---
 name: develop-marketing-copy
-description: Develop marketing copy through an interactive discussion, direction review, drafting, revision, and explicit approval. Use when a user wants to brainstorm, write, refine, localize, or version campaign copy without immediately generating a final answer or image.
+description: Develop marketing copy through an interactive discussion, direction review, drafting, revision, and explicit approval. Use when a user wants to brainstorm, write, refine, localize, or revise campaign copy without immediately generating a final answer or image.
 ---
 
 # Develop Marketing Copy
@@ -14,15 +14,16 @@ Develop copy collaboratively. Do not jump from an incomplete brief to final copy
 3. Separate exploration, draft, and approved states. Never describe unapproved text as final.
 4. Do not create or modify files until the user explicitly approves the exact write operation.
 5. Preserve approved wording. If a later constraint requires a wording change, explain the conflict and request approval.
+6. Do not invent or strengthen prices, availability, performance, statistics, comparisons, testimonials, endorsements, certifications, guarantees, or legal or medical claims. Use only facts supplied by the user or supported by approved profile evidence with its source and approval or validity information; treat unsupported claims as blocking unresolved items.
 
 ## Resolve project and brand context
 
 1. Resolve the Git root with `git rev-parse --show-toplevel`.
 2. Stop and explain if the current directory is not inside a Git repository.
-3. Require `brand-id` and `campaign-id` to use lowercase kebab-case.
-4. If the user names a brand, read `<git-root>/marketing/brands/<brand-id>/profile.md` when it exists.
-5. If the named profile is missing, ask whether to use `$manage-marketing-brand` or continue without a profile.
-6. If no brand is named, list discovered profiles when possible and ask the user to select one or choose brand-neutral mode.
+3. Require `brand-id` and `campaign-id` to use lowercase kebab-case. Reserve `brand-neutral` for profile-free work and never treat it as a profile-backed brand.
+4. If the user names a brand other than `brand-neutral`, read `<git-root>/marketing/brands/<brand-id>/profile.md` when it exists.
+5. If the named profile is missing, ask whether to use `$manage-marketing-brand` or switch to `brand-neutral`; never continue under a named brand without its profile.
+6. If no brand is named, list discovered profiles when possible and ask the user to select one or choose brand-neutral mode. In brand-neutral mode, use `brand-id: brand-neutral`, do not load a profile, and record `source_profile: null` in the approved-copy handoff.
 7. Treat the current task brief as the most specific context. When it conflicts with a required or forbidden brand rule, identify the conflict and obtain an explicit decision.
 
 ## Develop the copy
@@ -34,23 +35,17 @@ Develop copy collaboratively. Do not jump from an incomplete brief to final copy
 5. Draft copy for the selected direction and label it as a draft.
 6. Revise through feedback while tracking unresolved decisions.
 7. Present an approval candidate with its channel, headline, body, CTA, required text, and character constraints.
-8. Ask for explicit approval. Treat later edits as a new approved version rather than overwriting an earlier saved version.
+8. Ask for explicit approval. If later edits are requested, return the copy to draft state and obtain renewed approval before updating the current campaign package.
 
 ## Save approved output
 
 1. Save only after explicit approval.
-2. When invoked by `$run-marketing-creative` in deferred-save mode, do not create or modify campaign files; return the approved handoff so the coordinating skill can save the complete copy-and-image snapshot.
-3. When used independently, use `<git-root>/marketing/outputs/<brand-id>/<YYYY-MM-DD>-<campaign-id>/vNN/`.
-4. Use the user's local date for a new campaign directory and retain that directory for later versions.
-5. Select the next unused zero-padded version, beginning with `v01`.
-6. Never overwrite or delete an existing version.
-7. For `v02` and later, create a complete snapshot by carrying forward unchanged approved artifacts and replacing only approved changes.
-8. Write `creative-brief.md`, `copy/<channel>.md`, and `manifest.yaml`. Omit unavailable image artifacts in a copy-only snapshot.
-9. Record the brand, campaign, version, creation timestamp, previous version, channels, source profile, approval status, and artifact paths in `manifest.yaml`.
-10. Before writing, show the exact destination, files, copy-forward operation, and risks, then obtain confirmation.
+2. When invoked by `$run-marketing-creative` in deferred-save mode, do not create or modify campaign files; return the approved handoff so the coordinating skill can save the complete copy-and-image campaign package.
+3. When used independently, read `../run-marketing-creative/references/campaign-output.md`, relative to this skill directory, and apply its `copy-only` mode.
+4. Before writing, show the exact destination, files, updates, and risks, then obtain confirmation.
 
 ## Handoff
 
-1. Return the approved copy with the brand, campaign, channel, CTA, mandatory text, forbidden changes, and version path.
-2. In deferred-save mode, report the version path as pending rather than selecting or reserving a version.
+1. Immediately before returning approved copy, read `../run-marketing-creative/references/marketing-handoffs.md`, relative to this skill directory, and create an `approved-copy` handoff.
+2. In deferred-save mode, keep the handoff's campaign-output status pending and do not create or modify campaign files.
 3. When image creation is requested, pass this handoff unchanged to `$create-marketing-image`.

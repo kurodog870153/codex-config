@@ -99,8 +99,10 @@ choice /c YN /n /m "Execute skill or work rules already exist. Merge and overwri
 if errorlevel 2 goto cancelled
 
 :copy_files
-if not exist "!target_directory!\skills\" mkdir "!target_directory!\skills"
-if errorlevel 1 goto failed_skills_directory
+if not exist "!target_directory!\skills\execute\" (
+    mkdir "!target_directory!\skills\execute"
+    if errorlevel 1 goto failed_skills_directory
+)
 xcopy "%source_skill%\*" "!target_directory!\skills\execute\" /E /I /Y /Q >nul
 if errorlevel 1 goto failed_skill_copy
 

@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Marketing",
     "shortDescription": "Develop copy and create coordinated marketing images.",
-    "longDescription": "Marketing guides interactive copy development, creates images only from approved copy, manages reusable project-local brand profiles, and saves approved campaign snapshots without overwriting prior versions.",
+    "longDescription": "Marketing guides interactive copy development, creates images only from approved copy, manages reusable project-local brand profiles, and saves current approved campaign packages while keeping generated images out of Git.",
     "developerName": "wu-ming-hsun",
     "category": "Productivity",
     "capabilities": [

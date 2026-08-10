@@ -23,6 +23,8 @@ Do not store secrets in this file.
 2. Value proposition: `<primary value>`
 3. Differentiators: `<defensible distinctions>`
 4. Evidence: `<approved proof points>`
+5. Evidence sources: `<source or approved reference for each proof point>`
+6. Evidence approval and validity: `<approval owner and valid-through date, if applicable>`
 
 ## Voice and copy
 
