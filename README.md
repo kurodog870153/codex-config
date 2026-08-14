@@ -30,6 +30,7 @@
 └── os-scripts/
     ├── mac/
     │   ├── install-global-agents.command
+    │   ├── install-work.command
     │   ├── install-plan.command
     │   ├── install-task.command
     │   ├── install-execute.command
@@ -37,6 +38,7 @@
     │   └── clean-codex-data.command
     └── windows/
         ├── install-global-agents.bat
+        ├── install-work.bat
         ├── install-plan.bat
         ├── install-task.bat
         ├── install-execute.bat
@@ -70,9 +72,11 @@ web/backend/java
 每一層會依序尋找：
 
 ```text
-~/.codex/work/<skill>/<resolved-path>/AGENTS.md
+<user-config-root>/work/<skill>/<resolved-path>/AGENTS.md
 <project-root>/work/<skill>/<resolved-path>/AGENTS.md
 ```
+
+`<user-config-root>` 由目前 skill 的安裝位置推導，會將 `<skill-directory>/../..` 正規化。例如，安裝於 `~/.codex/skills/` 或 `~/.continue/skills/` 時，會分別解析為 `~/.codex` 或 `~/.continue`。
 
 其中 `<skill>` 為 `plan`、`task` 或 `execute`。
 
@@ -139,13 +143,27 @@ $execute web backend java
 
 ### 技能與工作規則
 
-三個技能分別使用以下安裝器：
+建議使用整合安裝器：
+
+1. macOS：`os-scripts/mac/install-work.command`
+2. Windows：`os-scripts/windows/install-work.bat`
+
+整合安裝器可選擇：
+
+1. `plan`
+2. `task`
+3. `execute`
+4. `all`
+
+選擇 `all` 時，安裝器會逐類型詢問可選工作規則，但只詢問一次目標目錄；若目標已有任一選定類型或不同的共用工作指示，也只統一確認一次是否合併及覆寫。
+
+以下既有安裝器會轉呼叫整合安裝器，仍可直接使用：
 
 1. Plan：`install-plan.command` 或 `install-plan.bat`
 2. Task：`install-task.command` 或 `install-task.bat`
 3. Execute：`install-execute.command` 或 `install-execute.bat`
 
-每個技能安裝器必定安裝：
+每個被選取的技能必定安裝：
 
 1. `skills/<skill>/`
 2. `work/<skill>/general/AGENTS.md`
