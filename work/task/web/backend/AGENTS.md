@@ -6,3 +6,16 @@
 4. Red 只是暫時狀態；TASK 完成時累積工作區必須通過全部適用驗證。
 5. 可重現的相關測試放入實作 TASK；需資料庫、Redis、特定本機檔案或外部服務的完整回歸另建具明確前置條件的驗證 TASK。
 6. 不得為通過驗證排除、停用、替換或延後必要測試；只列適用測試，高影響測試省略且原因不明顯時簡述原因。
+7. 建立資料表或新增欄位的 TASK，必須要求每個新增資料表與欄位具備非空 comment，並固定 comment 內容及驗證方式；不得只為部分新增欄位提供 comment。
+8. 新增或修改後端流程的 TASK，必須固定 `Controller → 業務 Service → Persistence Service → 資料庫存取層` 的完整依賴鏈路；各層只能呼叫下一層，不得跨層或反向依賴。未觸及的既有程式不主動重構。
+    1. Controller 只處理傳輸協定、輸入驗證、目前使用者資訊、請求／回應轉換及呼叫業務 Service，不得包含業務規則或直接呼叫其他層。可取得目前使用者資訊時，須依專案既有風格由 Controller 取得並傳入業務 Service；預設只傳用例所需的使用者 ID，業務確實需要時才能傳既有使用者物件。業務 Service 不得直接存取 Controller、HTTP Session 或安全框架上下文。
+    2. 業務 Service 負責所有業務規則、用例流程、跨 Persistence Service 協調及交易邊界，不得直接查詢或持久化資料。
+    3. Persistence Service 只封裝資料操作並呼叫資料庫存取層，不得包含業務規則、用例流程或交易邊界。
+    4. 資料庫存取層只執行查詢與持久化，不得包含資料操作編排或業務邏輯。
+9. 前述各層的類別與介面命名優先遵循專案既有規範；沒有明確慣例時，使用下列預設：
+    1. Controller 使用 `Controller` 後綴，前綴及端點分組粒度沿用專案風格。
+    2. 業務 Service 使用 `Service` 後綴；若 `Service` 在專案中已代表封裝資料操作的層級，則使用 `BusinessService` 後綴。
+    3. Persistence Service 使用 `PersistenceService` 後綴。
+    4. 資料庫存取層使用 `Repository` 後綴。
+    5. 介面不加 `I` 前綴，實作類別使用 `Impl` 後綴。
+10. 套件與目錄結構優先遵循專案既有規範；沒有明確慣例時，先依技術分層再依功能分組，依序使用 `controller/<功能>`、`service/<功能>`、`persistence/<功能>` 及 `repository/<功能>`。
