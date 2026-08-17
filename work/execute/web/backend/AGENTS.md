@@ -1,7 +1,10 @@
 # 後端任務執行規範
 
 1. 嚴格依 TASK 固定的契約、責任、交易及資料行為執行。
-2. TASK 明訂的 TDD Red 是驗證步驟；實際結果符合 VAL 預定失敗條件時，視為 Red 驗證通過而非非預期測試失敗，得繼續 Green。無法確認原因，或包含編譯、環境、工具、既有測試等非預期失敗時立即停止。
+2. TASK 明訂的 TDD Red 是驗證步驟，須依下列順序執行：
+    1. 執行 Red 的 `CMD-*` 前，唯讀確認 TASK 前序步驟要求的最小可編譯骨架與目標測試均已實際建立，且測試類、專案相對路徑及所屬模組符合 TASK；由基線或前序 TASK 提供的必要輸入亦須仍存在。
+    2. 前述產物因目前 TASK 的已核准前序步驟尚未完成而缺少時，須先在同一 Attempt 完成該步驟並依通用規則檢查差異，不得提前執行 Red；TASK 本身未提供必要骨架、測試或輸入時，視為規格缺陷並在執行 Red 前停止。
+    3. 實際結果符合 VAL 預定失敗條件時，視為 Red 驗證通過而非非預期測試失敗，得繼續 Green；無法確認失敗原因，或包含非預期的編譯、環境、工具、既有測試錯誤時，依通用錯誤處理規則辦理。
 3. 完整回歸所需的外部條件不足時標記「受阻」，不得自行排除、停用或替換測試。
 4. 建立資料表或新增欄位時，必須依 TASK 為每個新增資料表與欄位設定非空 comment，並執行 TASK 固定的驗證；TASK 未固定 comment 內容或驗證方式時，須回報規格不符並停止。
 5. 新增或修改後端流程時，必須依 TASK 實作 `Controller → 業務 Service → Persistence Service → 資料庫存取層` 的完整依賴鏈路；各層只能呼叫下一層，不得跨層或反向依賴。未觸及的既有程式不主動重構。
@@ -9,4 +12,5 @@
     2. 業務 Service 實作所有業務規則、用例流程、跨 Persistence Service 協調及交易邊界，不得直接查詢或持久化資料。
     3. Persistence Service 只封裝資料操作並呼叫資料庫存取層，不得包含業務規則、用例流程或交易邊界。
     4. 資料庫存取層只執行查詢與持久化，不得包含資料操作編排或業務邏輯。
-6. 實作前須唯讀確認專案既有命名與套件／目錄結構並優先沿用；沒有明確慣例時，依 TASK 使用下列預設：Controller 使用 `Controller` 後綴；業務 Service 使用 `Service` 後綴，但 `Service` 已代表封裝資料操作的層級時改用 `BusinessService`；Persistence Service 使用 `PersistenceService`；資料庫存取層使用 `Repository`；介面不加 `I` 前綴，實作類別使用 `Impl` 後綴。套件／目錄先依技術分層再依功能分組，使用 `controller/<功能>`、`service/<功能>`、`persistence/<功能>` 及 `repository/<功能>`。
+6. Attempt 建立前須完成必要的唯讀探索，確認 TASK 固定或引用的模組、命名、套件／目錄、既有類別與介面位置及簽章符合專案現況並優先沿用既有慣例；沒有明確慣例時，依 TASK 使用下列預設：Controller 使用 `Controller` 後綴；業務 Service 使用 `Service` 後綴，但 `Service` 已代表封裝資料操作的層級時改用 `BusinessService`；Persistence Service 使用 `PersistenceService`；資料庫存取層使用 `Repository`；介面不加 `I` 前綴，實作類別使用 `Impl` 後綴。套件／目錄先依技術分層再依功能分組，使用 `controller/<功能>`、`service/<功能>`、`persistence/<功能>` 及 `repository/<功能>`。
+7. 前項唯讀探索發現 TASK 固定方案與專案現況或既有慣例衝突，且不修改 TASK 即無法正確執行時，須在對話中回報規格不符，不得建立純探索用途或沒有副作用成果的 Attempt；預計建立的新目錄不存在，但其結構符合 TASK 與既有慣例時，不構成衝突。
