@@ -63,6 +63,7 @@ For each resolved path, in hierarchy order:
 3. Select existing files without loading their contents into the model first:
    1. If both exist, use a tool to compare their raw bytes. When identical, read only the project-level file and record the user-level file as a skipped duplicate; when different, read both in the listed order.
    2. If only one exists, read it.
+4. Read every selected file by explicitly decoding its raw bytes as UTF-8; accept an optional UTF-8 BOM, but never rely on a shell, platform, locale, or tool's default text encoding. If strict UTF-8 decoding fails, stop, report the exact file path, and do not guess or retry with another encoding.
 
 ## Apply layered work instructions
 

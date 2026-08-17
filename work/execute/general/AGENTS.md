@@ -3,34 +3,44 @@
 ## 1. 邊界與載入
 
 1. 只執行已核准 TASK；不得修改 Plan／TASK、改寫需求或擴大成果。
-2. TASK、Plan、index 預設位於 `outputs/tasks/<需求編號>.md`、`outputs/plans/<需求編號>.md`、`outputs/executions/<需求編號>/index.md`，共用需求編號；使用者明確指定並確認其他專案相對路徑時才使用該路徑，且三者對應必須一致。Plan 只供名稱對應。
+2. TASK、Plan、execution 目錄預設位於 `outputs/tasks/<requirement-id>.md`、`outputs/plans/<requirement-id>.md`、`outputs/executions/<requirement-id>/`，共用需求編號；index 固定位於適用 execution 目錄的 `index.md`。任一項使用非預設路徑時，使用者須明確指定並確認需求編號及 Plan、TASK、execution 目錄三個實際專案相對路徑，不得只提供其中一項或由一個路徑推測其他路徑，且三者對應必須一致。Plan 只供名稱對應。
 3. 只載入 TASK 基準、目標 TASK、其引用的 `DECISION-*`、index，以及適用的最新 Attempt、承接鏈與 Correction；稽核、衝突或使用者要求時才讀完整歷史。
-4. SHA 由工具計算，不把 TASK 全文載入模型；仍可唯讀檢查適用 AGENTS、TASK 範圍內程式碼、產物與工作區。
+4. TASK SHA-256 由工具直接讀取 TASK 檔案計算，不把 TASK 全文載入模型；演算法固定為：以 UTF-8 嚴格解碼 TASK 位元組，移除僅位於文字開頭的 U+FEFF BOM，依序將全文正規化為 Unicode NFC、將 CRLF 與其餘 CR 轉為 LF、移除檔尾全部 LF 後補回單一 LF，再以 UTF-8 無 BOM 編碼並對所得位元組計算 SHA-256；計算結果固定為 64 個小寫十六進位字元。仍可唯讀檢查適用 AGENTS、TASK 範圍內程式碼、產物與工作區。
+5. 讀取 TASK、Plan、index、Attempt 或 Correction 前，須以平台實際路徑規則正規化全部對應路徑：預設路徑須分別保留在專案根目錄下的 `outputs/tasks/`、`outputs/plans/` 及 `outputs/executions/` 邊界內，其他路徑須保留在專案根目錄內；不得接受絕對路徑或空路徑，移除單一開頭的 `./` 或 `.\` 後不得含 `.`／`..` 路徑片段，也不得接受正規化後改變需求編號對應片段、彼此互相別名或與不同字面名稱產生平台別名衝突的路徑。既有路徑及最接近的既有祖先若包含 symlink／junction，須解析實際目標並確認仍在適用邊界內；任一項無法確認時停止，不得建立執行鎖、Attempt、Correction 或修改 index。
 
 ## 2. 唯讀前置檢查
 
-1. 建立 Attempt 前確認 index 沒有規格鎖、TASK-SPEC 與 SHA 相符、相依 TASK 已完成、必要前序產物實際存在、檔案操作符合現況、工作區差異可解釋且命令入口可用。
-2. TASK 為「待執行」或「待重新執行」時可建立新 Attempt；「進行中」只能安全續接 index 所列進行中 Attempt；「受阻」只能在阻礙解除後建立新 Attempt；「已完成」不得執行。
-3. 除適用的續接／承接外，「建立」已存在、「修改」不存在，或移動來源／目的不符時，停止並回報規格不符；不得改變操作類型。
-4. 既有差異只有路徑與內容均可由核准 TASK、Attempt／Correction、TASK 變更及目前 diff 逐項解釋時，才視為待續接、承接或前序累積成果；不得只依路徑判定，無法確認即停止。
-5. 工作區實作差異檢查只排除目前 execution 目錄，不得排除整個 `outputs/`；已核准 CMD 正常產生的非交付暫存輸出不視為實作差異。
-6. 前置檢查失敗只在對話回報，不建立 Attempt 或修改 index；下次執行重新檢查。
+1. 建立 Attempt 前確認 TASK 已記錄 `規則層級`，且與本次 execute 流程正規化後的完整選取層級名稱及順序完全一致；另確認 index 沒有規格鎖或執行鎖、TASK-SPEC 與 SHA 相符、相依 TASK 已完成、必要前序產物實際存在、檔案操作符合現況、工作區差異可解釋且命令入口可用。
+2. 目標 TASK 的必要欄位為 `追溯`、`目標`、`步驟` 及至少一個 `VAL-*`；全部欄位只能依 `追溯`、`相依`、`輸入`、`決策`、`目標`、`檔案`、`風險`、`步驟`、`CMD-*`、`OP-*`、`VAL-*` 排列。選用欄位沒有內容時必須省略，其餘欄位不得改名、重排或使用同義欄位，同類 ID 必須依數字遞增排列。
+3. `追溯` 與 `相依` 分別使用 `、` 分隔適用的追溯 ID 與直接相依 TASK ID；`輸入` 每項固定為 `來源：<來源>；執行前條件：<條件>`；文件層共用決策固定為 `DECISION-001：<已確認決策>` 並位於文件層欄位之後、第一個 TASK 之前，TASK 內 `決策` 的共用項目只列存在的 `DECISION-*`，其他項目直接記已確認方案。`檔案` 每項只接受 `建立：<path>`、`修改：<path>` 或 `移動：<來源> → <目的>`；`風險` 每項固定為 `條件：<條件>；影響：<影響>；處置：<處置>`。
+4. `OP-*` 固定為 `OP-001：操作：<操作>；目標：<目標>；驗證：<VAL-ID>`；自動 VAL 固定為 `VAL-001：自動；執行：<CMD-ID 清單>；通過：<客觀條件>`，人工 VAL 固定為 `VAL-001：人工；確認者：<確認者>；判準：<可觀察判準>`。自動 VAL 的 CMD ID、OP 的 VAL ID 及 `決策` 的 DECISION ID 必須存在；只有直接驗收成果的 VAL 才能在末尾加入 `；驗收：<ACCEPTANCE-ID 清單>`，且只能引用目標 TASK `追溯` 內的 `ACCEPTANCE-*`；所有 ID 清單均以 `、` 分隔。
+5. 舊 TASK 缺少上述必要 schema、格式或引用關係時，視為前置檢查階段的規格缺陷，停止並依第 7.1 節以前置檢查格式交接 task 流程升版；不得建立 Attempt、執行鎖或修改 index，不得以相容推測補足。
+6. TASK 為「待執行」或「待重新執行」時可建立新 Attempt；「進行中」只能安全續接 index 所列進行中 Attempt；「受阻」只能在阻礙解除後建立新 Attempt；「已完成」或「已取消」不得執行。
+7. 除適用的續接／承接外，「建立」已存在、「修改」不存在，或移動來源／目的不符時，停止並回報規格不符；不得改變操作類型。
+8. 既有差異只有路徑與內容均可由核准 TASK、Attempt／Correction、TASK 變更及目前 diff 逐項解釋時，才視為待續接、承接或前序累積成果；不得只依路徑判定，無法確認即停止。
+9. 工作區實作差異檢查只排除目前 execution 目錄，不得排除整個 `outputs/`；已核准 CMD 正常產生的非交付暫存輸出不視為實作差異。
+10. 前置檢查失敗只在對話回報，不建立 Attempt 或修改 index；下次執行重新檢查。
 
 ## 3. Index
 
-1. index 預設位於 `outputs/executions/<需求編號>/index.md`，保存 TASK-SPEC、正規化 TASK SHA、整體狀態及每個 TASK 的單行狀態，不保存更新時間、命令、驗證證據或完整路徑。
-2. TASK 狀態只使用「待執行」、「進行中」、「待重新執行」、「受阻」及「已完成」。
+1. index 固定位於適用 execution 目錄的 `index.md`，預設為 `outputs/executions/<requirement-id>/index.md`；保存 TASK-SPEC、正規化 TASK SHA、整體狀態及每個 TASK 的單行狀態，不保存更新時間、命令、驗證證據或完整路徑。
+2. TASK 狀態只使用「待執行」、「進行中」、「待重新執行」、「受阻」、「已完成」及「已取消」。
 3. TASK 行固定包含 TASK ID 與狀態；最新 Attempt、最新 Correction、阻礙或狀態差異原因僅在存在時加入，且只記 ID。
-4. 全部待執行時整體為「待執行」；全部必要 TASK 完成時為「已完成」；沒有進行中或可執行 TASK，且未完成項目均受直接或相依阻礙時為「受阻」；其他為「進行中」。
+4. 全部 TASK 已取消時整體為「已取消」；否則忽略已取消 TASK 後，全部待執行時整體為「待執行」，全部必要 TASK 完成時為「已完成」，沒有進行中或可執行 TASK 且未完成項目均受直接或相依阻礙時為「受阻」，其他為「進行中」。已取消 TASK 不視為已完成，也不提供驗收證據。
 5. 規格鎖存在時不得執行；Execute 不得解除規格鎖。
+6. 執行鎖固定使用 `執行鎖：<Attempt 或 Correction>；TASK：<TASK-ID>；記錄：<ATTEMPT-ID 或 CORRECTION-ID>`，只由 Execute 建立及解除；規格鎖與執行鎖互斥，且都固定放在 TASK-SHA-256 與整體狀態之間。
+7. Attempt 的執行鎖在建立 Attempt 前取得，整個進行期間持續保留，直到 Attempt 結案內容與 index 狀態在同一結案流程完成同步後才解除。
+8. Correction 的執行鎖在建立 Correction 前取得，直到 Correction 檔案、TASK 狀態、下游狀態及 index 參照全部完成同步後才解除。
+9. 任一執行鎖存在時，不得建立其他 Attempt、Correction 或規格鎖；只能依第 8 節續接或恢復鎖定的同一操作，plan／task 流程不得解除執行鎖。
 
 ## 4. 第一次授權與 Attempt 建立
 
 1. 第一次授權摘要列 TASK、目標、適用檔案、步驟、CMD、OP、VAL、影響判斷的風險，以及將建立 Attempt、記錄結果、結案並更新 index；已列項目不需逐行重新詢問。
 2. 同一最小 TASK 的多個 OP 可在一次摘要中一併授權；未列入摘要的副作用不得執行。
-3. 授權後建立 `ATTEMPT-*`，記狀態、TASK-SPEC、TASK SHA、開始時間；承接成果時另依第 8 節記錄，再將 Attempt 與 index TASK 狀態設為「進行中」。
-4. Attempt 預設位於 `outputs/executions/<需求編號>/<TASK-ID>/<ATTEMPT-ID>.md`；每個 TASK 各自由 `ATTEMPT-001` 起編號。
+3. 授權後先決定下一個 `ATTEMPT-*`，並在 index 寫入對應的 Attempt 執行鎖；鎖寫入成功後才建立 Attempt，記狀態、TASK-SPEC、TASK SHA、開始時間，承接成果時另依第 8 節記錄，再將 index 的最新 Attempt 與 TASK 狀態設為「進行中」，但保留執行鎖。
+4. Attempt 固定位於適用 execution 目錄的 `<TASK-ID>/<ATTEMPT-ID>.md`，預設為 `outputs/executions/<requirement-id>/<TASK-ID>/<ATTEMPT-ID>.md`；每個 TASK 各自由 `ATTEMPT-001` 起編號。
 5. 同一 TASK 只能有一個進行中 Attempt；既有 Attempt 必須安全續接或經授權結案。TASK-SPEC 或 SHA 已變更時先結案舊 Attempt，再按新規格建立 Attempt。
+6. 執行鎖寫入失敗時不得建立 Attempt；鎖寫入後任一步驟中斷時保留執行鎖，後續只依第 8 節恢復，不得另取 Attempt ID 或自行解除鎖。
 
 ## 5. 執行中紀錄
 
@@ -57,39 +67,54 @@
 4. Attempt 與 TASK 狀態固定對應：進行中→進行中、已完成→已完成、一般已停止→待重新執行、規格缺陷已停止→受阻、受阻→受阻；規格缺陷只停止並交接 task 流程，不得修改 TASK。
 5. 外部阻礙解除後，可在新授權中直接建立 Attempt 並設為「進行中」；不先單獨改為「待重新執行」。
 6. Attempt 結案且留下修改時保留累積修改檔案，供後續承接核對。
+7. 「已取消」只能由 plan／task 流程依核准規格變更設定；Execute 不得將 TASK 設為、移出或重新啟用「已取消」。
 
 ## 7. 結案與回報
 
-1. 完成、停止或受阻後，加入結束時間、按實際結果更新 Attempt 與 index，再回報結果、修改檔案、CMD／OP／VAL 摘要及剩餘風險。
+1. 完成、停止或受阻時，先在 Attempt 加入結束時間並完成結案，再以一次 index 更新同步最新 Attempt、TASK 狀態、整體狀態及適用欄位並解除執行鎖，最後才回報結果、修改檔案、CMD／OP／VAL 摘要及剩餘風險；index 更新失敗時保留執行鎖，不得修改已結案 Attempt，須依第 8 節恢復。
 2. 結案後 Attempt 不可修改或增加重複摘要欄；時間使用 24 小時制 `YYYY-MM-DDTHH:mm±HH:mm`，進行中只記開始，結案再加結束。
 
 ### 7.1 無法繼續時的討論與交接
 
-1. Attempt 以「已停止」或「受阻」結案並完成回報後，須詢問使用者後續處理方向；使用者要繼續處理時，每次只詢問一項，討論至做法明確且獲得確認。使用者已明確表示不再處理時停止追問。
+1. Attempt 以「已停止」或「受阻」結案並完成回報後，或前置檢查在未建立 Attempt、執行鎖及 index 變更前發現規格缺陷並完成回報後，須詢問使用者後續處理方向；使用者要繼續處理時，每次只詢問一項，討論至做法明確且獲得確認。使用者已明確表示不再處理時停止追問。
 2. 做法確認後，依現有 Plan 與 TASK 判定為「不需修改規格」、「只修改 TASK」或「修改 Plan 與 TASK」；只影響檔案、命令、外部操作、驗證或其他執行細節時屬「只修改 TASK」，影響 Plan 目標、範圍、成果、驗收或決策時屬「修改 Plan 與 TASK」。
 3. 「不需修改規格」時，明確列出 Plan 與 TASK 均不需修改、判定理由、解除阻礙或重新執行所需條件，以及下一次 execute 應取得的授權；不得產生規格交接指令。
 4. 需要修改規格時，先列出需修改及不需修改的 Plan／TASK、判定理由與交接流程；「只修改 TASK」使用 `$task`，「修改 Plan 與 TASK」使用 `$plan`，並說明須依 task 規則同步 TASK 與 execution index。
-5. 規格交接指令須放在單一純文字程式碼區塊，第一行只放 `$task` 或 `$plan`，其後依序提供需求編號、目標 TASK、Execute 結案資訊、已確認做法、逐項修改要求、不應變更的範圍、受影響 ID 及驗證要求；結案資訊至少包含 Attempt ID、狀態、類型與原因。
-6. 規格交接指令必須使用本次對話與文件中的實際值，內容足以由對應流程直接開始唯讀核對及需求確認；不得保留占位符、未決問題、候選方案或要求對應流程自行推測做法。
+5. 規格交接指令須放在單一純文字程式碼區塊，第一行使用 `$task [name ...]` 或 `$plan [name ...]`；名稱固定取自目標正式 TASK 的 `規則層級`，排除開頭的 `general` 後維持原順序，只有 `general` 時省略名稱。其後依序提供需求編號、實際 Plan／TASK／execution 目錄路徑、目標 TASK、Execute 處理資訊、已確認做法、逐項修改要求、不應變更的範圍、受影響 ID 及驗證要求；三個路徑即使使用預設值也不得省略。已有 Attempt 時，處理資訊至少包含 Attempt ID、狀態、類型與原因；因前置檢查規格缺陷而未建立 Attempt 時，處理資訊固定包含 `Attempt：未建立`、`階段：前置檢查`、`類型：規格缺陷` 及 `原因：<具體原因>`，不得虛構 Attempt ID、狀態或結案資訊。
+6. 規格交接指令第一行的層級名稱及其餘內容必須使用本次對話與文件中的實際值，內容足以由對應流程直接開始唯讀核對及需求確認；不得自行推測、省略或替換層級，不得保留占位符、未決問題、候選方案或要求對應流程自行推測做法。
 7. 本節只產生對話中的交接指令；Execute 不得修改 Plan、TASK 或建立規格鎖。完成對應的 plan／task 流程前，不得建立新的 Attempt。
 
-## 8. 續接、承接與 Correction
+## 8. 執行鎖恢復、續接、承接與 Correction
 
 1. 本節只在 index 或使用者要求符合情境時適用；不得藉此改寫 TASK 或擴大成果。
-2. 續接進行中 Attempt 前，唯讀核對工作區與紀錄；無法逐項解釋既有成果時停止。
-3. 承接只指向同一 TASK 的最新已結案 Attempt，不得跳過或循環；複製其已核對累積修改檔案。只有目標 `CMD/OP/VAL` 已完成、現況仍符合 TASK 且未被規格變更失效時，才記 `承接 <ID>：<ATTEMPT-ID>/<ID>` 並免重做；證據不足則依目前 TASK 執行，若與保留成果衝突即回報規格不符。
-4. 更正須獨立授權；只建立同目錄的 `<ATTEMPT-ID>-CORRECTION-001` 並更新 index，不修改 TASK、實作或原 Attempt。內容限建立時間、目標、欄位、正確值、原因及必要證據；寫入後不可修改，再次更正取下一號。
-5. Correction 使完成狀態失效時，目標及已完成下游 TASK 改為「待重新執行」；只有 TASK 狀態與最新 Attempt 結果不一致時，index 才記原因。
+2. 執行鎖存在時，先唯讀核對鎖、TASK、index、目標紀錄及工作區，只能處理鎖定的同一 TASK 與記錄；任何狀態寫入、補建紀錄、續接或解除鎖均須重新摘要操作並取得明確授權。目標不同、無法逐項解釋或狀態不能唯一判定時保留鎖並停止。本節要求交由人工處理時，Execute 須列出鎖、目標路徑、已確認欄位、缺漏或衝突及修復後應符合的骨架，不得修改、刪除、移動衝突紀錄或解除鎖；使用者自行修復後，Execute 只先唯讀重新核對，再依本節重新取得授權恢復同一操作。
+3. Attempt 執行鎖依下列方式恢復：
+    1. 目標 Attempt 不存在時，只有 TASK 仍可執行、該 ID 仍為下一號、工作區沒有無法解釋的副作用，且重新取得授權後，才能以目前時間建立目標 Attempt、同步 index 並保留鎖繼續執行。
+    2. 目標 Attempt 為「進行中」時，核對 TASK-SPEC、SHA、index 與累積修改檔案；可完整解釋時，經授權補齊必要的 index 狀態並保留鎖安全續接。
+    3. 目標 Attempt 已結案時，不修改 Attempt；經授權依其最終狀態同步 index 並解除鎖。
+    4. 目標 Attempt 已存在但格式不完整時，只有內容為空，或既有內容是第 10.2 或 10.3 節適用建立骨架的無衝突子集，且路徑、ID、TASK-SPEC、SHA、承接關係、工作區與缺少值均可唯一確認，沒有執行紀錄或無法解釋的副作用時，才能在重新取得授權後保留既有正確值並補齊同一 Attempt 的建立欄位；缺少開始時間時使用恢復建立的目前時間。補齊後須重新核對完整骨架，再同步 index 並保留鎖繼續執行；這不視為修改已結案 Attempt。
+    5. Attempt 既有內容衝突、包含無法解釋的執行紀錄或副作用、存在多個進行中 Attempt，或任一缺少值不能唯一確認時，保留鎖並依第 2 項交由人工處理。
+4. 既有「進行中」Attempt 沒有執行鎖時，須先唯讀確認 index 指向該唯一 Attempt、TASK-SPEC 與 SHA 相符且工作區可完整解釋，再經明確授權補建對應執行鎖；補鎖前不得續接或執行任何 `CMD/OP/VAL`。
+5. 續接具有效執行鎖的進行中 Attempt 前，仍須唯讀核對工作區與紀錄；無法逐項解釋既有成果時保留鎖並停止。
+6. 承接只指向同一 TASK 的最新已結案 Attempt，不得跳過或循環；複製其已核對累積修改檔案。只有目標 `CMD/OP/VAL` 已完成、現況仍符合 TASK 且未被規格變更失效時，才記 `承接 <ID>：<ATTEMPT-ID>/<ID>` 並免重做；證據不足則依目前 TASK 執行，若與保留成果衝突即回報規格不符。
+7. 更正須獨立授權；決定下一個 `<ATTEMPT-ID>-CORRECTION-001` 後，先在 index 寫入對應的 Correction 執行鎖，鎖寫入成功後才建立同目錄的 Correction。Correction 不修改 TASK、實作或原 Attempt，內容限建立時間、目標、欄位、正確值、原因及必要證據；寫入後不可修改，再次更正取下一號。最後以一次 index 更新同步最新 Correction、TASK 與下游狀態並解除鎖。
+8. Correction 執行鎖中斷時，恢復前須依第 2 項重新取得授權，並依下列方式處理：
+    1. 目標 Correction 不存在時，只有原核准的目標、內容及 ID 仍可唯一確認且有效時才能建立；建立並核對完整後，依第 7 項同步 index 與下游狀態並解除鎖。
+    2. 目標 Correction 已存在且內容完整有效時不得重寫，只同步 index 並解除鎖。
+    3. 目標 Correction 已存在但格式不完整時，只有既有內容是第 10.6 節建立骨架的無衝突子集，且原核准的目標、欄位、正確值、原因、必要證據及缺少值仍可唯一確認時，才能在重新取得授權後保留既有正確值並補齊同一 Correction；缺少建立時間時使用恢復建立的目前時間。補齊並重新核對完整骨架後，該 Correction 即不可修改，再同步 index 並解除鎖。
+    4. Correction 內容衝突、原核准內容已無法唯一確認，或狀態不能唯一判定時，保留鎖並依第 2 項交由人工處理。
+9. Correction 使完成狀態失效時，目標及已完成下游 TASK 改為「待重新執行」；只有 TASK 狀態與最新 Attempt 結果不一致時，index 才記原因。已取消 TASK 維持「已取消」，不得因 Correction 重新啟用或改變狀態。
 
 ## 9. 完成
 
 1. TASK 只有全部適用 VAL 通過才能標記「已完成」。
-2. 所有必要 TASK 已完成即代表 Plan 驗收已有 Attempt 證據；不重讀全部 Attempt 或建立 `completion.md`。
+2. 所有未取消的必要 TASK 已完成即代表 Plan 驗收已有 Attempt 證據；不重讀全部 Attempt 或建立 `completion.md`。
+3. 全部 TASK 已取消時整體為「已取消」，只表示目前沒有需要執行的 TASK，不代表 Plan 驗收已有 Attempt 證據。
 
 ## 10. 最小骨架
 
 1. 下列為唯一欄位名稱與順序；`<占位符>` 必須替換，不得輸出。選用欄位沒有內容時整行省略，不得新增同義欄位。
-2. 跨文件值不得自行改寫：TASK-SPEC 與 TASK ID 取自正式 TASK，TASK-SHA-256 依第 1 節計算，`CMD/OP/VAL/DECISION` ID 必須存在於目標 TASK，Attempt／Correction ID 必須符合檔案路徑及 index。
+2. 跨文件值不得自行改寫：TASK-SPEC 與 TASK ID 取自正式 TASK，TASK-SHA-256 依第 1 節第 4 項計算，`CMD/OP/VAL/DECISION` ID 必須存在於目標 TASK，Attempt／Correction ID 必須符合檔案路徑及 index。
 
 ### 10.1 Index
 
@@ -104,13 +129,20 @@ TASK-001：待執行
 ```
 
 1. `規格鎖：更新中` 僅由 plan／task 流程建立，固定放在 TASK-SHA-256 與整體狀態之間。
-2. 每個 TASK 固定一行並依 TASK 文件順序排列；選用欄位順序固定如下：
+2. 執行鎖僅由 Execute 建立，固定格式如下，並與規格鎖使用相同位置：
+
+```markdown
+執行鎖：Attempt；TASK：TASK-001；記錄：ATTEMPT-001
+```
+
+3. Correction 鎖將類型改為 `Correction`，記錄使用完整 Correction ID；規格鎖與執行鎖不得同時存在，沒有鎖時省略該行。
+4. 每個 TASK 固定一行並依 TASK 文件順序排列；選用欄位順序固定如下：
 
 ```markdown
 TASK-001：<TASK 狀態>；最新 Attempt：<ATTEMPT-ID>；最新 Correction：<CORRECTION-ID>；阻礙：<TASK-ID 或 ATTEMPT-ID>；狀態差異原因：<CORRECTION-ID 或 TASK-CHANGE-ID>
 ```
 
-3. TASK 行只保留實際存在的選用欄位；不得輸出占位符或空欄位。
+5. TASK 行只保留實際存在的選用欄位；不得輸出占位符或空欄位。
 
 ### 10.2 Attempt 建立
 

@@ -18,6 +18,7 @@
 .
 ├── AGENTS.md
 ├── skills/
+│   ├── shared/
 │   ├── plan/
 │   ├── task/
 │   └── execute/
@@ -49,12 +50,13 @@
 ## 核心元件
 
 1. `AGENTS.md`：全域 AI 工作規範，包含需求釐清、執行授權、實作、驗證、Git 與安全規則。
-2. `skills/plan`：載入用於建立、修改、檢視或執行計畫的分層規則。
-3. `skills/task`：載入用於建立、修改、檢視或維護任務文件的分層規則。
-4. `skills/execute`：載入用於執行指定 `TASK-*` 任務的分層規則。
-5. `work/`：依技能、工作類型與技術領域存放可組合的 `AGENTS.md`。
-6. `plugins/marketing`：提供品牌管理、行銷文案、行銷圖片與完整創意流程。
-7. `os-scripts/`：提供 Windows 與 macOS 的獨立安裝及清理工具。
+2. `skills/shared`：提供 Plan、Task 與 Execute 共用的分層規則選取、定位、載入及覆寫順序指示。
+3. `skills/plan`：載入用於建立、修改、檢視或執行計畫的分層規則。
+4. `skills/task`：載入用於建立、修改、檢視或維護任務文件的分層規則。
+5. `skills/execute`：載入用於執行指定 `TASK-*` 任務的分層規則。
+6. `work/`：依技能、工作類型與技術領域存放可組合的 `AGENTS.md`。
+7. `plugins/marketing`：提供品牌管理、行銷文案、行銷圖片與完整創意流程。
+8. `os-scripts/`：提供 Windows 與 macOS 的獨立安裝及清理工具。
 
 ## 分層規則
 
@@ -121,8 +123,13 @@ $execute web backend java
 
 執行任務時，使用者還必須指定：
 
-1. `./outputs/tasks/<plan-name>.md` 任務文件。
+1. 使用預設路徑 `./outputs/tasks/<requirement-id>.md` 的任務文件，或使用者明確指定並確認的其他專案相對路徑。
 2. 該文件內的一個 `TASK-*` 識別碼。
+3. Plan、TASK 或 execution 目錄任一使用非預設路徑時，須同時明確指定並確認需求編號與三個實際專案相對路徑，不得只提供其中一項或由一個路徑推測其他路徑。index 固定位於該 execution 目錄的 `index.md`，Attempt 與 Correction 也保存在該目錄下的對應 TASK 子目錄。
+4. 與正式 TASK 所記 `規則層級` 完全相同的 Execute 規則層級；缺少欄位或層級不一致時，須先使用 `$task` 更新 TASK 規格及 execution index。
+5. 同一需求的 execution index 同時只允許一個執行鎖；Attempt 進行期間會持續持有，Correction 更新期間也會使用。中斷後須先唯讀核對並重新取得授權，才能恢復或解除鎖。
+6. 不再需要的 TASK 由 plan／task 流程標記為「已取消」並保留歷史；Execute 不執行或重新啟用已取消 TASK，全部 TASK 已取消時整體狀態為「已取消」。
+7. 需求編號維持小寫英數、`.`、`_`、`-` 的既有格式；路徑可使用單一開頭的 `./` 或 `.\`，移除後不得再含 `.`／`..` 片段，且所有預設與替代路徑仍須通過正規化、專案邊界、symlink／junction 及平台別名檢查，未通過時不得讀寫或執行。
 
 載入執行規則本身不代表已授權修改檔案或執行具副作用的操作。
 
@@ -166,7 +173,10 @@ $execute web backend java
 每個被選取的技能必定安裝：
 
 1. `skills/<skill>/`
-2. `work/<skill>/general/AGENTS.md`
+2. `skills/shared/work/hierarchical-instructions.md`
+3. `work/<skill>/general/AGENTS.md`
+
+同一次安裝選取多個技能時，共用指示檔只需安裝一次，並由所有選取的技能共同使用。
 
 安裝器會動態掃描 `work/<skill>/**/AGENTS.md`，並以編號列出 general 以外的規則：
 

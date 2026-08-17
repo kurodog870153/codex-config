@@ -1,24 +1,29 @@
 # Java 後端任務規劃規範
 
-1. 唯讀確認 Java 版本、模組、可用的 Maven Wrapper／Maven 執行檔、JUnit、Surefire／Failsafe、測試位置及既有命令；TASK 只保存確認事實與正式 `CMD/VAL`。不得因目標為子模組而要求該子模組自備或使用 Wrapper；Maven `CMD-*` 可使用適用的 Wrapper，或 TASK 明列的 `mvn`／`mvn.cmd` 絕對路徑。
-2. 僅當 TASK 新增或變更 Java／Spring、編譯 release、Wrapper、Maven／Gradle、依賴／外掛、JUnit、Surefire／Failsafe，或需求涉及版本相容性時，核准前依官方第一方資料固定唯一相容版本組合；來源不足、衝突或仍有候選時維持對話草案。其他 TASK 沿用可唯讀確認的既有固定版本，不另做相容性研究或建立 `版本基準`。
+1. 唯讀確認 Java 版本、JDK／toolchain、既有 Maven／Gradle 建置系統、模組、建置檔與 DSL、可用 Wrapper／系統執行檔、JUnit、測試外掛、測試位置及既有命令；TASK 只保存確認事實與正式 `CMD/VAL`，並適用下列規則：
+    1. 沿用專案既有且適用於目標模組的單一建置系統；不得自行由 Maven 切換為 Gradle、由 Gradle 切換為 Maven，或為同一變更新增另一套建置設定。
+    2. 不得因目標為子模組而要求該子模組自備 Wrapper。Maven `CMD-*` 可使用適用的 Wrapper，或 TASK 明列的 `mvn`／`mvn.cmd` 絕對路徑。
+    3. Gradle Wrapper 存在且適用時必須使用該 Wrapper；不存在時只能使用 TASK 已固定並預檢通過的系統 Gradle 執行檔與版本。TASK 必須固定目標 shell 適用的精確命令、工作目錄、Wrapper 根目錄或系統執行檔、Groovy／Kotlin DSL、模組或 Gradle project path、實際 task 名稱、參數／property，以及生效的 Java、JDK／toolchain 與測試位置。
+    4. 不得假設專案一定提供 `test`、`check`、`build` 或其他通用 task；須由既有設定、實際 task 定義或已核准預檢固定唯一 task。可能初始化、下載或寫入資料的 Gradle 預檢仍須依通用授權規則處理。
+    5. 產生或升級 Wrapper、Gradle、plugin、JDK／toolchain，或修改建置 DSL 與設定時，必須明列對應檔案、版本、步驟及 `CMD/VAL`；不得作為執行時順帶修正。
+2. 僅當 TASK 新增或變更 Java／Spring、編譯 release、Wrapper、Maven／Gradle、依賴／外掛、JUnit、Surefire／Failsafe，或需求涉及版本相容性時，核准前依官方第一方資料固定唯一相容版本組合；來源不足、衝突或仍有候選時維持對話草案。其他 TASK 沿用可唯讀確認的既有固定版本，不另做相容性研究或建立版本基準。
 3. 前款適用時，版本使用精確值或由精確 parent、BOM、Wrapper 唯一推導，不得使用 `latest`、範圍或候選版本；以正式 `CMD/VAL` 驗證實際版本與完整建置測試，官方資料或單獨的 `BUILD SUCCESS` 不得取代驗證。
-4. 需要 `版本基準` 時，只影響一個 TASK 則在該 TASK 使用 `版本基準：<元件=精確值或唯一推導來源>`；影響至少兩個 TASK 則在文件層以 `DECISION-*` 保存同一格式，並由各適用 TASK 使用 `版本基準：<DECISION-ID>` 引用。不得在其他文字另訂第二組版本值。
-5. 每個 `版本基準` 須有唯一 `相容性依據`，逐項記錄官方第一方來源的可重現定位與支持結論；只有搜尋結果、來源名稱或無依據的「相容」不得核准。
-6. 需要 `版本基準` 但靜態資訊不足時維持對話草案；可能產生建置輸出的 Maven／Gradle 預檢須先取得授權。
+4. 需要版本基準時，只影響一個 TASK 則在該 TASK 的 `決策` 編號清單使用 `版本基準：<元件=精確值或唯一推導來源>；相容性依據：<官方來源可重現定位與支持結論>`；影響至少兩個 TASK 則以相同內容建立文件層 `DECISION-*`，各適用 TASK 在 `決策` 清單只引用該 ID。不得建立 `版本基準`、`相容性依據` 等額外 TASK 欄位，亦不得在其他文字另訂第二組版本值。
+5. 每個版本基準須有唯一相容性依據，逐項記錄官方第一方來源的可重現定位與支持結論；只有搜尋結果、來源名稱或無依據的「相容」不得核准。
+6. 需要版本基準但靜態資訊不足時維持對話草案；可能產生建置輸出的 Maven／Gradle 預檢須先取得授權。
 7. 使用 Spring Initializr 或其他專案產生器時，核准前須固定產生器版本與全部參數，並依目前實際回應或產物清單逐項核對 TASK 的「建立」路徑及必要建置設定；不得只依歷史範本或文件推測輸出。
-8. CMD 依目標 shell 產生，PowerShell 使用參數陣列，zsh／bash 個別引用參數；使用 `mvn`、`mvnw` 或 `mvnw.cmd` 執行建置或測試時，須在其他 Maven goal／phase 前明列 `clean`，已有 `clean` 時不得重複加入；Maven reactor 使用 `-am` 指定測試時先分析上游，只有上游需要時才加入 `failIfNoSpecifiedTests=false`。
+8. CMD 依目標 shell 產生，PowerShell 使用參數陣列，zsh／bash 個別引用參數。使用 `mvn`、`mvnw` 或 `mvnw.cmd` 執行建置或測試時，須在其他 Maven goal／phase 前明列 `clean`，已有 `clean` 時不得重複加入；Maven reactor 使用 `-am` 指定測試時先分析上游，只有上游需要時才加入 `failIfNoSpecifiedTests=false`。使用 Gradle 時，須從 TASK 固定的工作目錄呼叫適用於目標 shell 的 Wrapper 或系統執行檔，並明列完整 project path、task、測試篩選及所有參數／property；不得由 Execute 補上或替換 task 與參數。
 9. VAL 必須確認目標模組實際執行、指定測試類被發現且測試數大於 0；不得只以 `BUILD SUCCESS` 判定通過。
-10. 除未觸及的既有程式不主動重構外，新增或修改流程必須遵循上層後端規範的完整依賴鏈路；TASK 只記本次必要的責任、交易、模型轉換及核准例外。
+10. 除未觸及的既有程式不主動重構外，新增或修改流程必須遵循 TASK 依上層後端規範固定的已確認架構、依賴鏈路及責任邊界；只有 TASK 選用四層架構時才套用上層完整四層鏈路。TASK 只記本次必要的責任、交易、模型轉換及核准例外。
 11. MyBatis／MyBatis-Plus TASK 核准前必須固定下列事項：
     1. 固定唯一映射責任、null 行為、enum 轉換、alias、`notNullColumn` 及對應測試。
-    2. 唯讀確認既有 MyBatis-Plus 版本與持久層架構；符合既有架構及版本基準時，Mapper 優先繼承 `BaseMapper`，Persistence Service 介面優先繼承 `IService`、實作優先繼承 `ServiceImpl`。既有專案採用其他抽象時須沿用，不得為套用本規範主動遷移至 `IRepository`。
-    3. Persistence Service 查詢優先規劃使用 `IService.lambdaQuery()`；新增或修改流程不得省略業務 Service 或 Persistence Service，也不得由 Controller 直接呼叫 Mapper。未觸及的既有純 Mapper 流程不主動重構。只有既有通用介面無法表達需求時，才能規劃自訂 Mapper／XML，並固定原因、適用邊界及測試。
+    2. 唯讀確認既有 MyBatis-Plus 版本與持久層架構；符合既有架構及版本基準時，Mapper 優先繼承 `BaseMapper`。只有 TASK 選用 Persistence Service 層時，其介面才優先繼承 `IService`、實作優先繼承 `ServiceImpl`；既有專案採用其他抽象時須沿用，不得為套用本規範主動遷移至 `IRepository` 或新增層級。
+    3. TASK 選用四層架構時，Persistence Service 查詢優先規劃使用 `IService.lambdaQuery()`，且新增或修改流程不得省略業務 Service 或 Persistence Service，也不得由 Controller 直接呼叫 Mapper。TASK 選用其他架構時，依已固定的責任邊界與呼叫鏈路規劃；只有 TASK 明確固定其原因、邊界與測試時才能使用直接 Mapper 路徑。未觸及的既有純 Mapper 流程不主動重構。只有既有通用介面無法表達需求時，才能規劃自訂 Mapper／XML，並固定原因、適用邊界及測試。
     4. Controller、RPC 或前端不得傳入 `Wrapper` 或 SQL 片段；動態欄位與排序欄位須使用後端白名單，`last()`、`apply()`、`inSql()`、`exists()` 等可接收 SQL 內容的 API 不得拼接不可信輸入。
     5. 更新與刪除須固定明確條件、目標範圍及預期影響筆數，預設禁止全表更新或刪除；確有必要時須固定原因、保護措施及驗證。
     6. 單筆查詢須固定唯一性或明確選取規則；不得以 `getOne(..., false)` 或任意 `LIMIT 1` 掩蓋資料重複。
     7. 分頁查詢參數使用 `Page<T>`，回傳型別可宣告為 `IPage<T>`；須固定單頁最大筆數、溢出行為、穩定排序及總筆數語意。
-    8. 多筆或跨 Mapper 寫入須固定業務 Service 交易邊界；大量寫入優先使用既有版本支援的批次 API，不得以迴圈逐筆寫入，並須固定失敗、回滾、部分成功行為及驗證。
+    8. 多筆或跨 Mapper 寫入須在 TASK 已確認架構的協調層固定交易邊界；四層架構使用業務 Service，其他架構使用 TASK 明列的責任層。大量寫入優先使用既有版本支援的批次 API，不得以迴圈逐筆寫入，並須固定失敗、回滾、部分成功行為及驗證。
     9. 專案使用邏輯刪除、租戶、資料權限或樂觀鎖時，須固定相關設定與預期條件；自訂 SQL 不得繞過，且須測試樂觀鎖衝突與實際影響筆數。
     10. 不適用前述優先原則或分頁要求時，TASK 須固定例外原因、資料量邊界、替代方案及對應驗證。
     11. 涉及資料庫日期欄位映射時，TASK 須依欄位語意固定 Java 型別與驗證：僅表示日期且不含時間與時區者使用 `java.time.LocalDate`；表示日期與時間且不含時區者使用 `java.time.LocalDateTime`。實際資料庫欄位型別須依目標資料庫、schema 與既有映射確認；純時間或含時區語意不適用本規則。
