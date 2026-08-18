@@ -16,9 +16,9 @@
     1. Controller 使用 `Controller` 後綴，前綴及端點分組粒度沿用專案風格。
     2. 業務 Service 使用 `Service` 後綴；若 `Service` 在專案中已代表封裝資料操作的層級，則使用 `BusinessService` 後綴。
     3. Persistence Service 使用 `PersistenceService` 後綴。
-    4. 資料庫存取層使用 `Repository` 後綴。
+    4. 資料庫存取層依 TASK 固定的關聯式資料技術命名：JPA 使用 `Repository` 後綴，MyBatis／MyBatis-Plus 使用 `Mapper` 後綴；其他技術由 TASK 固定適用後綴。
     5. 介面不加 `I` 前綴，實作類別使用 `Impl` 後綴。
-10. 套件與目錄結構優先遵循專案既有規範；TASK 選用四層架構且沒有明確慣例時，將先依技術分層再依功能分組的 `controller/<功能>`、`service/business/<功能>`、`service/persistence/<功能>` 及 `repository/<功能>` 納入方案並取得確認。其他架構須由 TASK 依既有結構固定，不得套用四層目錄預設。
+10. 套件與目錄結構優先遵循專案既有規範；TASK 選用四層架構且沒有明確慣例時，將先依技術分層再依功能分組的 `controller/<功能>`、`service/business/<功能>`、`service/persistence/<功能>`，以及 JPA 的 `repository/<功能>` 或 MyBatis／MyBatis-Plus 的 `mapper/<功能>` 納入方案並取得確認；其他關聯式資料技術由 TASK 固定資料庫存取層目錄。其他架構須由 TASK 依既有結構固定，不得套用四層目錄預設。
 11. 正式 TASK 核准前，須以唯讀探索逐項核對 TASK 預計建立、修改或移動的路徑，以及輸入與步驟引用的既有符號：
     1. 依目標模組的相鄰同類實作確認實際套件／目錄、命名、分層及測試位置，不得只依通用慣例推測。
     2. 確認引用的類別、介面、方法及設定實際存在，且位置、簽章、可見性與責任符合規劃用途。

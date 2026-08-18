@@ -15,18 +15,16 @@
 8. CMD 依目標 shell 產生，PowerShell 使用參數陣列，zsh／bash 個別引用參數。使用 `mvn`、`mvnw` 或 `mvnw.cmd` 執行建置或測試時，須在其他 Maven goal／phase 前明列 `clean`，已有 `clean` 時不得重複加入；Maven reactor 使用 `-am` 指定測試時先分析上游，只有上游需要時才加入 `failIfNoSpecifiedTests=false`。使用 Gradle 時，須從 TASK 固定的工作目錄呼叫適用於目標 shell 的 Wrapper 或系統執行檔，並明列完整 project path、task、測試篩選及所有參數／property；不得由 Execute 補上或替換 task 與參數。
 9. VAL 必須確認目標模組實際執行、指定測試類被發現且測試數大於 0；不得只以 `BUILD SUCCESS` 判定通過。
 10. 除未觸及的既有程式不主動重構外，新增或修改流程必須遵循 TASK 依上層後端規範固定的已確認架構、依賴鏈路及責任邊界；只有 TASK 選用四層架構時才套用上層完整四層鏈路。TASK 只記本次必要的責任、交易、模型轉換及核准例外。
-11. MyBatis／MyBatis-Plus TASK 核准前必須固定下列事項：
-    1. 固定唯一映射責任、null 行為、enum 轉換、alias、`notNullColumn` 及對應測試。
-    2. 唯讀確認既有 MyBatis-Plus 版本與持久層架構；符合既有架構及版本基準時，Mapper 優先繼承 `BaseMapper`。只有 TASK 選用 Persistence Service 層時，其介面才優先繼承 `IService`、實作優先繼承 `ServiceImpl`；既有專案採用其他抽象時須沿用，不得為套用本規範主動遷移至 `IRepository` 或新增層級。
-    3. TASK 選用四層架構時，Persistence Service 查詢優先規劃使用 `IService.lambdaQuery()`，且新增或修改流程不得省略業務 Service 或 Persistence Service，也不得由 Controller 直接呼叫 Mapper。TASK 選用其他架構時，依已固定的責任邊界與呼叫鏈路規劃；只有 TASK 明確固定其原因、邊界與測試時才能使用直接 Mapper 路徑。未觸及的既有純 Mapper 流程不主動重構。只有既有通用介面無法表達需求時，才能規劃自訂 Mapper／XML，並固定原因、適用邊界及測試。
-    4. Controller、RPC 或前端不得傳入 `Wrapper` 或 SQL 片段；動態欄位與排序欄位須使用後端白名單，`last()`、`apply()`、`inSql()`、`exists()` 等可接收 SQL 內容的 API 不得拼接不可信輸入。
-    5. 更新與刪除須固定明確條件、目標範圍及預期影響筆數，預設禁止全表更新或刪除；確有必要時須固定原因、保護措施及驗證。
-    6. 單筆查詢須固定唯一性或明確選取規則；不得以 `getOne(..., false)` 或任意 `LIMIT 1` 掩蓋資料重複。
-    7. 分頁查詢參數使用 `Page<T>`，回傳型別可宣告為 `IPage<T>`；須固定單頁最大筆數、溢出行為、穩定排序及總筆數語意。
-    8. 多筆或跨 Mapper 寫入須在 TASK 已確認架構的協調層固定交易邊界；四層架構使用業務 Service，其他架構使用 TASK 明列的責任層。大量寫入優先使用既有版本支援的批次 API，不得以迴圈逐筆寫入，並須固定失敗、回滾、部分成功行為及驗證。
-    9. 專案使用邏輯刪除、租戶、資料權限或樂觀鎖時，須固定相關設定與預期條件；自訂 SQL 不得繞過，且須測試樂觀鎖衝突與實際影響筆數。
-    10. 不適用前述優先原則或分頁要求時，TASK 須固定例外原因、資料量邊界、替代方案及對應驗證。
-    11. 涉及資料庫日期欄位映射時，TASK 須依欄位語意固定 Java 型別與驗證：僅表示日期且不含時間與時區者使用 `java.time.LocalDate`；表示日期與時間且不含時區者使用 `java.time.LocalDateTime`。實際資料庫欄位型別須依目標資料庫、schema 與既有映射確認；純時間或含時區語意不適用本規則。
+11. 規劃任何涉及關聯式資料存取的 TASK 前，須先以目標模組與本次流程為邊界，唯讀判定實際使用 JPA 或 MyBatis／MyBatis-Plus，並適用下列規則：
+    1. 判定必須交叉確認目標模組的 Maven／Gradle 建置相依，以及設定、註解、介面、實作、查詢或映射檔等實際用法；不得只因父模組、BOM、starter、傳遞相依或未被引用的程式碼存在就判定技術。
+    2. JPA 證據至少核對適用版本的 `jakarta.persistence`／`javax.persistence`、Spring Data JPA 或 Hibernate 相依，以及 `@Entity`、Spring Data Repository、`EntityManager`、JPA 設定或實際查詢等用法；MyBatis 證據至少核對 MyBatis／MyBatis-Plus 相依，以及 Mapper 介面／註解、Mapper XML、`SqlSession`、`BaseMapper` 或實際查詢等用法。
+    3. 修改既有流程且兩者並存時，依目標模組及該流程實際呼叫的資料存取鏈路選擇；不得以整個 repository 內任一技術的存在覆蓋目標流程的實際技術，亦不得因此遷移未觸及或未核准遷移的既有流程。
+    4. 規劃尚無既有資料存取鏈路的新流程時，若已確認目標模組的 JPA 與 MyBatis／MyBatis-Plus 均實際設定可用且皆適用需求，須逐項列出判定證據並請使用者指定，不得預設選用任一技術；確認前維持對話草案。只有相依但沒有可確認的實際用法、證據互相衝突、可用性或適用性仍不明，或無法唯一判定其他情況時，同樣須逐項列出證據並請使用者指定。
+    5. 兩者皆未使用時，必須請使用者指定 JPA 或 MyBatis／MyBatis-Plus；不得由 AI 選擇預設。
+    6. 使用者指定技術只固定本次規劃選擇，不代表授權新增或升級依賴、annotation processor、外掛、設定、schema migration 或其他檔案；需要的變更仍須由 TASK 明列並依通用規則取得授權。
+    7. 正式 TASK 必須在 `決策` 固定選用技術、目標模組、判定證據、實際版本、適用 namespace／provider 及資料存取架構；影響至少兩個 TASK 時使用文件層 `DECISION-*`，不得把候選技術留給 Execute 選擇。
+    8. 涉及關聯式資料存取的 TASK 必須載入與判定結果一致的唯一技術分支：JPA 使用 `java/jpa`，MyBatis／MyBatis-Plus 使用 `java/mybatis`。未載入技術分支、同時載入兩個分支，或載入分支與判定證據不符時，須請使用者以完整規則階層重新呼叫；確認前維持對話草案，不得核准 TASK。
+    9. TASK 須依本次影響固定並交叉核對目標資料庫與適用 dialect、既有 schema，以及受影響的資料表、欄位型別、constraint、index、foreign key 與 sequence；查詢、寫入、映射及 schema migration 必須一致。涉及 schema 變更時，須沿用專案既有且適用的單一 migration／初始化機制，明列 migration 檔案、執行順序、相容性邊界，以及必要的升級與回復或補償驗證，不得以另一套機制取代。未變更 schema 的 TASK 仍須驗證受影響 SQL、映射與實際 schema 一致；dialect、constraint、index、migration 或其他資料庫特有行為須在目標資料庫或 TASK 固定的相容環境驗證。
 12. 專案已具備 Lombok 依賴與有效 annotation processor 建置設定時，對 TASK 新增或修改的程式碼，在不改變必要行為、公開 API 或框架契約且符合本規範白名單與限制的前提下，優先規劃使用 Lombok 減少樣板程式碼。規劃前須唯讀確認既有依賴、有效版本、annotation processor 建置設定及實際使用方式；適用的 `lombok.config` 存在時亦須確認，文件規範與既有設定取交集，任一方禁止即不得使用。沒有 `lombok.config` 不影響已核准的 Lombok 使用，亦不得為套用本規範建立；既有設定不得由本規範修改。
 13. 原本未使用 Lombok 的專案可以新增，但 TASK 必須明確固定採用原因、精確版本或唯一版本來源、建置工具設定、影響範圍及 `CMD/VAL`；execute 不得自行新增或調整。
 14. 正式碼與測試碼共用 Lombok 白名單：`@Getter`、`@Setter`、`@RequiredArgsConstructor`、`@NoArgsConstructor`、`@AllArgsConstructor`、`@Value`、`@Builder`、`@Builder.Default`、`@Singular`、`@With`、`@EqualsAndHashCode`、`@ToString`、`@Slf4j` 及 `@Jacksonized`。未列入的註解預設禁止；例外須在 TASK 固定註解、目標、產生行為、原因及驗證。

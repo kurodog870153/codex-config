@@ -111,6 +111,15 @@ web/backend/java
 $task web backend java
 ```
 
+涉及關聯式資料存取時，必須依目標模組與本次流程的實際技術載入唯一分支：
+
+```text
+$task web backend java jpa
+$task web backend java mybatis
+```
+
+JPA 與 MyBatis／MyBatis-Plus 分支不得同時載入；尚未能唯一判定技術時維持對話草案，不得核准正式 TASK。
+
 載入規則本身不會建立、修改或執行任務，仍須由使用者明確提出要求並授權。
 
 ### Execute
@@ -120,6 +129,15 @@ $task web backend java
 ```text
 $execute web backend java
 ```
+
+執行涉及關聯式資料存取的 TASK 時，必須載入與 TASK `決策` 完全一致的唯一技術分支：
+
+```text
+$execute web backend java jpa
+$execute web backend java mybatis
+```
+
+未載入技術分支、同時載入兩個分支，或載入分支與 TASK `決策` 不符時，不得建立 Attempt。
 
 執行任務時，使用者還必須指定：
 
@@ -186,13 +204,16 @@ $execute web backend java
 4. 選擇深層規則時，會自動包含所有實際存在的上層規則。
 5. 未來新增 `AGENTS.md` 後，不需修改安裝器。
 
-例如選擇 `web/backend/java` 時，若以下規則都存在，會一併安裝：
+例如為 Task 或 Execute 選擇 `web/backend/java/jpa` 時，若以下規則都存在，會一併安裝：
 
 ```text
 web
 web/backend
 web/backend/java
+web/backend/java/jpa
 ```
+
+選擇 `web/backend/java/mybatis` 時亦同，最後一層改為 `web/backend/java/mybatis`。
 
 若某個上層沒有 `AGENTS.md`，安裝器不會建立不存在的規則。
 
