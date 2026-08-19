@@ -6,7 +6,7 @@
     3. TASK 須依既有 Maven／Gradle 設定固定 processor 的宣告位置、annotation processing 啟用方式、產生來源目錄、編譯整合及清理行為；缺少 processor 或有效設定時，必須將所需建置檔列入 TASK 並另行取得授權，不得只加入一般 runtime／implementation 相依或由 Execute 臨時補設定。
     4. VAL 須確認 processor 實際執行、目標 Entity 的 `*_` 靜態 Metamodel 已產生且參與編譯，測試數大於 0；Criteria／Specification 對已產生屬性優先使用靜態 Metamodel，不得以字串屬性路徑取代。產生檔不得手動修改，是否提交及輸出目錄沿用專案既有慣例，沒有慣例時須在 TASK 固定。
     5. Entity 映射須固定 access type、Entity／table 名稱、主鍵與產生策略、欄位名稱、null、長度、precision／scale、唯一性、預設值、識別碼不可變性及 schema 對應；複合主鍵另固定 `@EmbeddedId` 或 `@IdClass`、值相等性及查詢測試。`equals`／`hashCode` 須固定代理、未持久化與持久化狀態行為，不得只依可變欄位或資料庫產生 ID 推導。
-    6. enum 預設使用明確 `EnumType.STRING` 或已確認 converter，不得依 ordinal；日期、時間與時區依欄位語意、目標資料庫型別及既有映射固定，僅日期使用 `LocalDate`、無時區日期時間使用 `LocalDateTime`，含時區語意須另行固定型別、JDBC／Hibernate 時區設定及往返測試。
+    6. enum 預設使用明確 `EnumType.STRING` 或已確認 converter，不得依 ordinal；涉及 JPA 日期或時間欄位映射時，TASK 須遵循上層 Java 共通規則，並依欄位語意、目標資料庫型別及既有映射固定 JPA 映射；含時區語意須另行固定 JDBC／Hibernate 時區設定及往返測試。
     7. 每個關聯須固定 cardinality、擁有端、`mappedBy`／join column、可空性、集合型別、雙向同步方式、fetch plan、cascade、`orphanRemoval` 及生命週期測試。沒有既有慣例時關聯優先明確 LAZY，並由個別查詢使用 fetch join、Entity Graph 或 projection 取得必要資料；`CascadeType.ALL` 預設禁止，cascade 採最小集合，`orphanRemoval` 只用於父實體私有擁有的子實體。
     8. Repository 須沿用專案既有抽象、命名及責任邊界；四層架構只由 Persistence Service 呼叫 Repository，業務 Service 不得直接操作 Repository／`EntityManager`。只有既有 Repository 抽象無法表達需求時，才能規劃自訂 Repository／`EntityManager`，並固定原因、邊界及測試。
     9. 簡單條件優先沿用既有 derived query，組合條件依既有慣例使用 Specification／Criteria，複雜固定查詢使用明確 JPQL／HQL；所有值須參數綁定，動態欄位及排序只接受後端白名單，不得拼接不可信 JPQL／HQL／SQL。native query 只限標準查詢無法正確表達或有已確認效能需求時使用，並固定 dialect、SQL、結果映射、count query、限制條件及整合測試。
@@ -17,6 +17,6 @@
     14. 大量寫入須固定資料量邊界、JDBC batch 設定、主鍵產生策略相容性、batch size、排序設定、定期 `flush`／`clear`、交易大小、記憶體上限及失敗／回滾／部分成功行為；不得只因使用 `saveAll` 就宣稱已批次化或以未受控迴圈逐筆寫入。
     15. 每個可能載入關聯的查詢須固定所需 fetch plan 與可觀察的 SQL／query count 上限，使用適用的 fetch join、Entity Graph、projection、batch fetch 或 subselect 避免 N+1；不得全域改為 EAGER。高資料量查詢須固定 projection、分頁／scroll、索引及記憶體邊界，效能例外須有代表性資料驗證。
     16. 除上層關聯式資料的 schema／migration 共通規則外，TASK 須固定 JPA 專屬的 Entity 映射與 schema validation，確認 Entity、constraint、index、foreign key、sequence 與實際 schema 及核准 migration 一致；正式環境不得以未核准的 `ddl-auto=create`、`create-drop` 或 `update` 取代 migration。建立資料表或欄位仍須遵循上層 comment 規則。
-    17. 專案使用 auditing、Entity listener、邏輯刪除、租戶或資料權限時，須固定建立／更新者與時間來源、目前使用者傳遞、適用查詢條件、bulk／native 行為及測試；不得由 Entity 直接讀取 Controller、HTTP Session 或安全框架上下文。
+    17. 專案使用 auditing 或會寫入稽核欄位的 Entity listener 時，TASK 須固定建立／更新者與時間來源、目前使用者傳遞、bulk／native 行為及測試；專案使用邏輯刪除、租戶或資料權限時，TASK 須固定目前使用者、租戶或其他適用主體來源、查詢條件、bulk／native 行為及測試，只有相關行為需要取得或產生目前日期或時間時才另行固定時間來源；不得由 Entity 直接讀取 Controller、HTTP Session 或安全框架上下文。
     18. 測試至少覆蓋受影響的映射、constraint、Repository 查詢、null／唯一性、關聯擁有端、cascade／orphan、fetch plan／query count、分頁／count、交易／回滾、鎖衝突、bulk persistence context、batch、audit／邏輯刪除／租戶及 migration。只有專案既有且適用時才使用 `@DataJpaTest`；dialect、鎖、migration 或原生 SQL 行為相關時，須在 TASK 固定的目標資料庫或相容測試環境驗證。
     19. 不適用上述安全預設時，TASK 須固定例外原因、資料量與生命週期邊界、替代方案及直接驗證；不得為套用本規範主動重構未觸及的既有 JPA 程式。
